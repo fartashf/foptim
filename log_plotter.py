@@ -141,6 +141,12 @@ def plot_tag(data, plot_f, run_names, tag_name, lg_tags, ylim=None, color0=0,
         idx = tag_name.find('_nolog')
         tag_name = tag_name[:idx]+tag_name[idx+6:]
     for i in range(10):
+        ylabel['est_var%d' % i] = ylabel['est_var']
+        ylabel['est_nvar%d' % i] = ylabel['est_nvar']
+        ylabel['est_snr%d' % i] = ylabel['est_snr']
+        titles['est_var%d' % i] = '%s (#%d)' % (titles['est_var'], i)
+        titles['est_nvar%d' % i] = '%s (#%d)' % (titles['est_nvar'], i)
+        titles['est_snr%d' % i] = '%s (#%d)' % (titles['est_snr'], i)
         for prefix in ['T', 'V']:
             data0 = data
             if not isinstance(data, list):
