@@ -142,17 +142,9 @@ def plot_tag(data, plot_f, run_names, tag_name, lg_tags, ylim=None, color0=0,
         tag_name = tag_name[:idx]+tag_name[idx+6:]
     for i in range(10):
         for prefix in ['T', 'V']:
-            xlabel['%slossC%d_h' % (prefix, i)] = xlabel['%sloss_h' % prefix]
-            ylabel['%slossC%d_h' % (prefix, i)] = ylabel['%sloss_h' % prefix]
-            classes = ''
             data0 = data
             if not isinstance(data, list):
                 data0 = [data0]
-            for d in data0:
-                if 'classes' in d and i < len(d['classes']):
-                    classes = d['classes'][i]
-            titles['%slossC%d_h' % (prefix, i)] = '%s, class %d,%s' % (
-                titles['%sloss_h' % prefix], i, classes)
     for k in list(ylabel.keys()):
         if k not in xlabel:
             xlabel[k] = 'Training Iteration'

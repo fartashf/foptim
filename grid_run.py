@@ -1,11 +1,9 @@
 from __future__ import print_function
 import argparse
 import grid
-import grid.dmom
 import grid.gvar
 import grid.cluster
 # from itertools import product
-import grid.ntk
 
 
 class RunSingle(object):
