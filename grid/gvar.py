@@ -21,14 +21,14 @@ def mnist(args):
         ('gvar_start', 0),
         ('g_bsnap_iter', 1),
         ('g_epoch', ''),
-        ('g_optim', ''),
-        ('g_optim_start', 0),
+        # ('g_optim', ''),
+        # ('g_optim_start', 0),
     ]
-    args_sgd = [('g_estim', ['sgd']),
+    args_sgd = [('g_estim', ['sgd,sgd']),
                 ('g_batch_size', [128, 256])]
     args += [OrderedDict(shared_args+gvar_args+args_sgd)]
 
-    args_svrg = [('g_estim', ['svrg'])]
+    args_svrg = [('g_estim', ['sgd,svrg'])]
     args += [OrderedDict(shared_args+gvar_args+args_svrg)]
 
     jobs_0 = ['bolt3_gpu0', 'bolt3_gpu1', 'bolt3_gpu2',
