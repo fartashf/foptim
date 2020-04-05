@@ -16,7 +16,7 @@ class SaveCheckpoint(object):
         # remember best prec@1 and save checkpoint
         self.best_prec1 = 0
 
-    def __call__(self, model, prec1, opt, optimizer,
+    def __call__(self, model, prec1, opt, optimizer, tb_logger,
                  filename='checkpoint.pth.tar'):
         is_best = prec1 > self.best_prec1
         self.best_prec1 = max(prec1, self.best_prec1)
@@ -25,9 +25,10 @@ class SaveCheckpoint(object):
             'niters': optimizer.niters,
             'opt': opt.d,
             'model': model.state_dict(),
+            'optim': optimizer.state_dict(),
+            'tb_logger': tb_logger.state_dict(),
             'best_prec1': self.best_prec1,
         }
-        state.update({'optim': optimizer.state_dict()})
 
         torch.save(state, opt.logger_name+'/'+filename)
         if is_best:

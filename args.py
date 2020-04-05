@@ -79,6 +79,11 @@ def add_args():
                         default=argparse.SUPPRESS, type=float)
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
+    parser.add_argument('--noresume', action='store_true',
+                        help='resume by default if an old run exists.')
+    parser.add_argument('--g_noresume', action='store_true',
+                        help='resume by default if an old run exists.')
+    parser.add_argument('--ckpt_name', default='model_best.pth.tar')
     parser.add_argument('--pretrained',
                         default=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--nodropout',
@@ -95,7 +100,6 @@ def add_args():
                         default=argparse.SUPPRESS, type=float)
     parser.add_argument('--duplicate',
                         default=argparse.SUPPRESS, type=str)
-    parser.add_argument('--ckpt_name', default='model_best.pth.tar')
     parser.add_argument('--g_estim', default=argparse.SUPPRESS, type=str)
     parser.add_argument('--epoch_iters',
                         default=argparse.SUPPRESS, type=int)
@@ -117,8 +121,6 @@ def add_args():
                         default=argparse.SUPPRESS, type=int)
     parser.add_argument('--g_optim_start_plus', action='store_true')
     parser.add_argument('--half_trained', action='store_true')
-    parser.add_argument('--g_resume',
-                        default=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--g_epoch',
                         default=argparse.SUPPRESS, action='store_true')
     parser.add_argument('--g_batch_size',

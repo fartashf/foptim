@@ -115,12 +115,25 @@ class GEstimatorMulti(object):
         return self.get_estim().grad(*args, **kwargs)
 
     def state_dict(self):
-        return (self.get_estim().state_dict(),
-                self.get_optim().state_dict())
+        state = {
+            'gest_used': self.gest_used,
+            'optim': [],
+            'gest': [],
+            'niters': self.niters
+        }
+        for name, optim in self.optim:
+            state['optim'] += [optim.state_dict()]
+        for name, g_estim in self.gest:
+            state['gest'] += [g_estim.state_dict()]
+        return state
 
     def load_state_dict(self, state):
-        self.get_estim().load_state_dict(state[0])
-        self.get_optim().load_state_dict(state[1])
+        self.gest_used = state['gest_used']
+        self.niters = state['niters']
+        for i, (name, optim) in enumerate(self.optim):
+            optim.load_state_dict(state['optim'][i])
+        for i, (name, g_estim) in enumerate(self.gest):
+            g_estim.load_state_dict(state['gest'][i])
 
     def get_estim(self):
         estim_id = self.gest_used if len(self.gest) > 1 else 0

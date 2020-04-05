@@ -1,6 +1,6 @@
 from collections import OrderedDict, defaultdict
 import numpy as np
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 import time
 import torch
 import os
@@ -30,6 +30,12 @@ class TBXWrapper(object):
         self.logger_name = logger_name
         self.logobj = defaultdict(lambda: list())
         self.opt = opt
+
+    def state_dict(self):
+        return {'logobj': dict(self.logobj)}
+
+    def load_state_dict(self, state):
+        self.logobj.update(state['logobj'])
 
     def log_value(self, name, val, step):
         self.writer.add_scalar(name, val, step)

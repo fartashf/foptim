@@ -61,7 +61,7 @@ def test(tb_logger, model, test_loader,
     return accuracy
 
 
-def train(tb_logger, epoch, train_loader, model, optimizer, opt, test_loader,
+def train(tb_logger, train_loader, model, optimizer, opt, test_loader,
           save_checkpoint, train_test_loader):
     batch_time = Profiler()
     gvar_time = Profiler()
@@ -96,7 +96,7 @@ def train(tb_logger, epoch, train_loader, model, optimizer, opt, test_loader,
                 'Loss: {loss:.6f}\t'
                 '{batch_time}\t'
                 '{opt_log}{gvar_log}{prof_log}'.format(
-                    epoch, batch_idx, len(train_loader),
+                    optimizer.epoch, batch_idx, len(train_loader),
                     loss=loss.item(),
                     batch_time=str(batch_time),
                     opt_log=str(optimizer.logger),
@@ -104,7 +104,7 @@ def train(tb_logger, epoch, train_loader, model, optimizer, opt, test_loader,
                     gvar_log=gvar_log,
                     niters=niters))
         if batch_idx % opt.tblog_interval == 0:
-            tb_logger.log_value('epoch', epoch, step=niters)
+            tb_logger.log_value('epoch', optimizer.epoch, step=niters)
             lr = optimizer.param_groups[0]['lr']
             tb_logger.log_value('lr', lr, step=niters)
             tb_logger.log_value('niters', niters, step=niters)
@@ -118,7 +118,8 @@ def train(tb_logger, epoch, train_loader, model, optimizer, opt, test_loader,
                      'Train', 'T')
             prec1 = test(tb_logger,
                          model, test_loader, opt, optimizer.niters)
-            save_checkpoint(model, float(prec1), opt, optimizer)
+            optimizer.epoch += 1
+            save_checkpoint(model, float(prec1), opt, optimizer, tb_logger)
             tb_logger.save_log()
         batch_time.end()
         profiler.end()
@@ -160,24 +161,25 @@ def main():
     model = models.init_model(opt)
 
     optimizer = OptimizerMulti(model, train_loader, tb_logger, opt)
-    epoch = 0
     save_checkpoint = utils.SaveCheckpoint()
 
     # optionally resume from a checkpoint
-    model_path = os.path.join(opt.resume, opt.ckpt_name)
-    if opt.resume != '':
+    if not opt.noresume:
+        if opt.resume != '':
+            model_path = os.path.join(opt.resume, opt.ckpt_name)
+        else:
+            model_path = os.path.join(opt.logger_name, 'checkpoint.pth.tar')
         if os.path.isfile(model_path):
             print("=> loading checkpoint '{}'".format(model_path))
             checkpoint = torch.load(model_path)
             best_prec1 = checkpoint['best_prec1']
-            if opt.g_resume:
+            tb_logger.load_state_dict(checkpoint['tb_logger'])
+            model.load_state_dict(checkpoint['model'])
+            save_checkpoint.best_prec1 = best_prec1
+            if not opt.g_noresume:
                 optimizer.load_state_dict(checkpoint['optim'])
-            else:
-                epoch = checkpoint['epoch']
-                model.load_state_dict(checkpoint['model'])
-                save_checkpoint.best_prec1 = best_prec1
             print("=> loaded checkpoint '{}' (epoch {}, best_prec {})"
-                  .format(model_path, epoch, best_prec1))
+                  .format(model_path, optimizer.epoch, best_prec1))
         else:
             print("=> no checkpoint found at '{}'".format(model_path))
 
@@ -187,15 +189,13 @@ def main():
         max_iters = opt.epochs * opt.epoch_iters
 
     while optimizer.niters < max_iters:
-        optimizer.epoch = epoch
         utils.adjust_lr(optimizer, opt)
         ecode = train(
             tb_logger,
-            epoch, train_loader, model, optimizer, opt, test_loader,
+            train_loader, model, optimizer, opt, test_loader,
             save_checkpoint, train_test_loader)
         if ecode == -1:
             break
-        epoch += 1
     tb_logger.save_log()
 
 

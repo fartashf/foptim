@@ -79,10 +79,10 @@ class GradientEstimator(object):
         return Ege, var_e, snr_e, nv_e
 
     def state_dict(self):
-        return {}
+        return {'niters': self.niters}
 
     def load_state_dict(self, state):
-        pass
+        self.niters = state['niters']
 
     def snap_model(self, model):
         logging.info('Snap Model')

@@ -11,15 +11,14 @@ class OptimizerMulti(object):
     def __init__(self, model, train_loader, tb_logger, opt):
         self.model = model
         self.opt = opt
+        self.epoch = 0
         self.niters = 0
         self.optimizer = None
         self.logger = LogCollector(opt)
         gestim_loader = get_gestim_loader(train_loader, opt)
         self.gest = GEstimatorMulti(model, gestim_loader, opt, tb_logger)
         self.tb_logger = tb_logger
-        self.init_snapshot = False
         self.gest_used = False
-        self.gest_counter = 0
         self.last_log_iter = 0
 
     @property
@@ -49,8 +48,6 @@ class OptimizerMulti(object):
         # model.eval()  # done inside SVRG
         model.train()
         self.gest.snap_batch(model)
-        self.init_snapshot = True
-        self.gest_counter = 0
 
     def snap_online(self, model):
         # model.eval()  # TODO: keep train
@@ -69,8 +66,6 @@ class OptimizerMulti(object):
         model.train()
         use_sgd = self.use_sgd(self.niters)
         self.gest_used = not use_sgd
-        if self.gest_used:
-            self.gest_counter += 1
         return self.gest.grad(use_sgd, model, in_place=True)
 
     def step(self, profiler):
@@ -100,11 +95,22 @@ class OptimizerMulti(object):
         return loss
 
     def state_dict(self):
-        return self.gest.state_dict()
+        state = {
+            'epoch': self.epoch,
+            'niters': self.niters,
+            'optim': self.optimizer,
+            'gest': self.gest.state_dict(),
+            'gest_used': self.gest_used,
+            'last_log_iter': self.last_log_iter,
+        }
+        return state
 
     def load_state_dict(self, state):
-        self.gest.load_state_dict(state)
-        self.init_snapshot = True
+        self.epoch = state['epoch']
+        self.niters = state['niters']
+        self.gest.load_state_dict(state['gest'])
+        self.gest_used = state['gest_used']
+        self.last_log_iter = state['last_log_iter']
 
     def zero_grad(self):
         return self.gest.get_optim().zero_grad()
